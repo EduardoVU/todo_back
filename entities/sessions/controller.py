@@ -10,7 +10,7 @@ def create_new_session(db: Session, session: SessionCreate, user_id: int):
     new_session = create_session(db, user_id, session.token, session.expires_at)
     if not new_session:
         raise HTTPException(status_code=400, detail="Error al crear la sesión.")
-    return SessionOut.from_orm(new_session)
+    return SessionOut.model_validate(new_session)
 
 def verify_code_controller(request, token: str, db: Session):
     try:

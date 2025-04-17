@@ -38,6 +38,6 @@ for entity_name in os.listdir(entities_path):
         module_name = f"entities.{entity_name}.router"
         try:
             module = importlib.import_module(module_name)
-            app.include_router(module.router)
+            app.include_router(module.router, prefix="/api")
         except ModuleNotFoundError as e:
             print(f"Error al importar el router {module_name}: {e}")

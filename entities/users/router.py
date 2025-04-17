@@ -2,21 +2,36 @@ from fastapi import APIRouter, Depends, HTTPException
 from fastapi.security import OAuth2PasswordRequestForm, OAuth2PasswordBearer
 
 from sqlalchemy.orm import Session
-from jose import JWTError, jwt
-from .schemas import UserCreate
-from . import schemas, controller
+from .schemas import UserCreate, UserResponse, UserUpdate
+from . import controller
 from .models import User
-from auth import SECRET_KEY, ALGORITHM, get_current_user
-from entities.sessions.repository import get_active_session
+from auth import get_current_user
 import database
+from typing import Optional
 
 
 router = APIRouter()
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="users/login")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="users/login", auto_error=False)
+
+
+# Dependencia opcional
+async def get_optional_user(token: Optional[str] = Depends(oauth2_scheme)) -> Optional[User]:
+    from auth import get_current_user
+    if token is None:
+        return None
+    try:
+        return await get_current_user(token)
+    except HTTPException:
+        return None
 
 @router.post("/users")
-def create_user(user_create: UserCreate, db: Session = Depends(database.get_db), current_user: User = Depends(get_current_user)):
+def create_user(
+    user_create: UserCreate,
+    db: Session = Depends(database.get_db),
+    current_user: Optional[User] = Depends(get_optional_user)
+):
+    print("Entramos a crear usuario")
     return controller.create_user(db, user_create, current_user)
 
 @router.get("/users")
@@ -28,7 +43,7 @@ def get_user_by_id_endpoint(user_id: int, db: Session = Depends(database.get_db)
     return controller.get_by_id_users(db=db, user_id=user_id, current_user=current_user)
 
 @router.put("/users")
-def edit_user_endpoint(user: schemas.UserUpdate, db: Session = Depends(database.get_db), current_user: User = Depends(get_current_user)):
+def edit_user_endpoint(user: UserUpdate, db: Session = Depends(database.get_db), current_user: User = Depends(get_current_user)):
     return controller.update_user(db=db, user=user, current_user=current_user)
 
 @router.delete("/users/{user_id}")
@@ -43,3 +58,6 @@ def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depend
 def logout(db: Session = Depends(database.get_db), current_user: User = Depends(get_current_user)):
     return controller.logout_user(db=db, current_user=current_user)
 
+@router.get("/me", response_model=UserResponse)
+def get_current_user_info(current_user: User = Depends(get_current_user)):
+    return current_user

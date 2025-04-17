@@ -68,4 +68,4 @@ class UserRepository:
         
         db.delete(db_user)
         db.commit()
-        return {"message": f"Usuario con id {user_id} eliminado correctamente"}
+        return {"message": f"Usuario eliminado correctamente"}
