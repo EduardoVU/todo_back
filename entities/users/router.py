@@ -31,7 +31,6 @@ def create_user(
     db: Session = Depends(database.get_db),
     current_user: Optional[User] = Depends(get_optional_user)
 ):
-    print("Entramos a crear usuario")
     return controller.create_user(db, user_create, current_user)
 
 @router.get("/users")

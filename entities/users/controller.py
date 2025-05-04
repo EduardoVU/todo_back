@@ -12,20 +12,24 @@ from sqlalchemy.exc import NoResultFound
 
 def create_user(db: Session, user: UserCreate, current_user: User):
     if user.role == RoleEnum.admin and current_user.role != RoleEnum.admin:
-        raise HTTPException(status_code=403, message="Solo un administrador puede crear un usuario administrador")
+        raise HTTPException(status_code=403, detail="Solo un administrador puede crear un usuario administrador")
+    
+    existing_user = db.query(User).filter(User.email == user.email).first()
+    if existing_user:
+        raise HTTPException(status_code=400, detail="Ya existe un usuario con este correo")
     
     # Usamos el repositorio para crear el usuario
     return UserRepository.create_user(db=db, user_data=user)
 
 def get_all_users(db: Session, current_user: User):
     if current_user.role != RoleEnum.admin:
-         raise HTTPException(status_code=403, message="Solo un administrador puede ver todos los usuarios")
+         raise HTTPException(status_code=403, detail="Solo un administrador puede ver todos los usuarios")
      
     return UserRepository.get_all_users(db=db)
 
 def get_by_id_users(db: Session, user_id: int, current_user: User):
     if current_user.role != RoleEnum.admin and current_user.id != user_id:
-        raise HTTPException(status_code=403, message="No tienes permiso para acceder a este usuario")
+        raise HTTPException(status_code=403, detail="No tienes permiso para acceder a este usuario")
     
     return UserRepository.get_by_id_users(db=db, user_id=user_id)
 
@@ -35,18 +39,18 @@ def update_user(db: Session, user: UserUpdate, current_user: User):
 
     # Prevenir que alguien que no sea admin se asigne el rol de admin
     if user.role == RoleEnum.admin and current_user.role != RoleEnum.admin:
-        raise HTTPException(status_code=403, message="Solo un administrador puede asignar el rol de administrador")
+        raise HTTPException(status_code=403, detail="Solo un administrador puede asignar el rol de administrador")
 
     if not user_to_update:
-        raise HTTPException(status_code=404, message="Usuario no encontrado")
+        raise HTTPException(status_code=404, detail="Usuario no encontrado")
 
     # Clientes solo pueden editarse a sí mismos
     if current_user.role == RoleEnum.cliente and current_user.id != user.id:
-        raise HTTPException(status_code=403, message="No tienes permiso para editar a este usuario")
+        raise HTTPException(status_code=403, detail="No tienes permiso para editar a este usuario")
 
     # Admins no pueden editar a otros admins (solo a sí mismos o a clientes)
     if current_user.role == RoleEnum.admin and current_user.id != user.id and user_to_update.role == RoleEnum.admin:
-        raise HTTPException(status_code=403, message="No puedes editar a otro administrador")
+        raise HTTPException(status_code=403, detail="No puedes editar a otro administrador")
 
     return UserRepository.update_user(db=db, user_data=user)
 
@@ -97,7 +101,9 @@ def login_user(form_data: OAuth2PasswordRequestForm, db: Session):
         expires_at=expires_at
     )
 
-    return { "success": True, "access_token": token, "token_type": "bearer" }
+    user_data = get_by_id_users(db=db, user_id=user.id, current_user=user)
+
+    return { "success": True, "access_token": token, "token_type": "bearer", "user": user_data }
 
 def logout_user(db: Session, current_user: User):
     session = session_repository.get_active_session(db, current_user.id)
@@ -107,4 +113,4 @@ def logout_user(db: Session, current_user: User):
 
     session_repository.delete_session(db, session.id)
 
-    return { "message": "Sesión cerrada correctamente" }
+    return { "detail": "Sesión cerrada correctamente", "success": True }
