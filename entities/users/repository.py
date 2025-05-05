@@ -4,6 +4,7 @@ from .models import User
 from .schemas import UserCreate, UserResponse, UserUpdate
 from passlib.context import CryptContext  # Usamos passlib para hash de contraseñas
 from sqlalchemy.orm.exc import NoResultFound
+from fastapi import HTTPException
 
 # Crear un contexto de hashing de contraseñas
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
@@ -36,15 +37,25 @@ class UserRepository:
     def get_by_id_users(db: Session, user_id: int):
         user = db.query(User).filter(User.id == user_id).first()
         if not user:
-            raise NoResultFound(f"Usuario con id {user_id} no encontrado")
+            return None
         return UserResponse.model_validate(user)
+
+    @staticmethod
+    def get_by_email(db: Session, email: str):
+        return db.query(User).filter(User.email == email).first()
 
     @staticmethod
     def update_user(db: Session, user_data: UserUpdate):
         db_user = db.query(User).filter(User.id == user_data.id).first()
         if not db_user:
             raise NoResultFound(f"Usuario con id {user_data.id} no encontrado")
-        
+
+        # Validar que el nuevo correo no esté en uso por otro usuario
+        if user_data.email and user_data.email != db_user.email:
+            existing_user = db.query(User).filter(User.email == user_data.email).first()
+            if existing_user and existing_user.id != user_data.id:
+                raise HTTPException(status_code=400, detail="El correo electrónico ya está en uso por otro usuario")
+
         if user_data.name is not None:
             db_user.name = user_data.name
         if user_data.last_name is not None:
@@ -55,7 +66,7 @@ class UserRepository:
             db_user.password = pwd_context.hash(user_data.password)
         if user_data.role is not None:
             db_user.role = user_data.role
-        
+
         db.commit()
         db.refresh(db_user)
         return UserRepository.get_by_id_users(db, db_user.id)

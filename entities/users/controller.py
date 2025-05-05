@@ -37,10 +37,6 @@ def update_user(db: Session, user: UserUpdate, current_user: User):
     # Obtener el usuario objetivo (el que se quiere editar)
     user_to_update = UserRepository.get_by_id_users(db, user.id)
 
-    # Prevenir que alguien que no sea admin se asigne el rol de admin
-    if user.role == RoleEnum.admin and current_user.role != RoleEnum.admin:
-        raise HTTPException(status_code=403, detail="Solo un administrador puede asignar el rol de administrador")
-
     if not user_to_update:
         raise HTTPException(status_code=404, detail="Usuario no encontrado")
 
@@ -51,8 +47,19 @@ def update_user(db: Session, user: UserUpdate, current_user: User):
     # Admins no pueden editar a otros admins (solo a sí mismos o a clientes)
     if current_user.role == RoleEnum.admin and current_user.id != user.id and user_to_update.role == RoleEnum.admin:
         raise HTTPException(status_code=403, detail="No puedes editar a otro administrador")
+    
+    # Nadie que no sea admin puede asignar el rol de admin, ni siquiera a sí mismo
+    if user.role == RoleEnum.admin and current_user.role != RoleEnum.admin:
+        raise HTTPException(status_code=403, detail="Solo un administrador puede asignar el rol de administrador")
 
-    return UserRepository.update_user(db=db, user_data=user)
+    # Validar que el nuevo correo no esté siendo usado por otro usuario
+    existing_user_with_email = UserRepository.get_by_email(db, user.email)
+    if existing_user_with_email and existing_user_with_email.id != user.id:
+        raise HTTPException(status_code=400, detail="El correo electrónico ya está en uso por otro usuario")
+
+    data = UserRepository.update_user(db=db, user_data=user)
+
+    return {'success': True, 'data': data, 'detail': 'Usuario editado con éxito'}
 
 def delete_user(db: Session, user_id: int, current_user: User):
     try:
