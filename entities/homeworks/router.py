@@ -46,5 +46,4 @@ def delete_homework(
     db: Session = Depends(database.get_db),
     current_user: User = Depends(get_current_user)
 ):
-    print("Entramos al router")
     return controller.delete_homework(db=db, homework_id=homework_id, current_user=current_user)
