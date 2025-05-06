@@ -32,6 +32,8 @@ def get_homeworks_by_user_id(db: Session, user_id: int, current_user: User):
 
     if updated:
         db.commit()
+        for hw in homeworks:
+            db.refresh(hw)
 
     return homeworks
 

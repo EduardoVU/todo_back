@@ -41,9 +41,5 @@ def update_homework(
     return controller.update_homework(db=db, updated_homework=updated_homework, current_user=current_user)
 
 @router.delete("/homeworks/{homework_id}")
-def delete_homework(
-    homework_id: int,
-    db: Session = Depends(database.get_db),
-    current_user: User = Depends(get_current_user)
-):
+def delete_homework(homework_id: int, db: Session = Depends(database.get_db), current_user: User = Depends(get_current_user)):
     return controller.delete_homework(db=db, homework_id=homework_id, current_user=current_user)

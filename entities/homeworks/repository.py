@@ -1,6 +1,7 @@
 from sqlalchemy.orm import Session
 from .models import Homework
 from .schemas import HomeworkCreate, HomeworkUpdate
+from sqlalchemy import desc
 
 def create_homework(db: Session, homework_data: HomeworkCreate):
     # Crear nueva tarea
@@ -15,11 +16,11 @@ def create_homework(db: Session, homework_data: HomeworkCreate):
     db.flush()  # Hacemos flush para asegurarnos de que se genere el ID antes de hacer commit
     db.commit()
     db.refresh(new_homework)
-    return new_homework
+    return {'success': True, 'data': new_homework, 'message': 'Tarea creada con éxito'}
 
 def get_homeworks_by_user_id(db: Session, user_id: int):
     # Obtener todas las tareas de un usuario por su ID
-    return db.query(Homework).filter(Homework.user_id == user_id).all()
+    return db.query(Homework).filter(Homework.user_id == user_id).order_by(desc(Homework.id)).all()
 
 def get_homework_by_id(db: Session, homework_id: int):
     # Obtener una tarea específica por ID
@@ -33,13 +34,15 @@ def update_homework(db: Session, homework: Homework, updated_data: HomeworkUpdat
         homework.description = updated_data.description
     if updated_data.due_date is not None:
         homework.due_date = updated_data.due_date
+    if updated_data.status is not None:
+        homework.status = updated_data.status
 
     db.commit()  # Hacemos commit para aplicar los cambios
     db.refresh(homework)  # Refresca el objeto con los datos de la base de datos
-    return homework
+    return {'success': True, 'data': homework, 'message': 'Tarea editada con éxito'}
 
 def delete_homework(db: Session, homework: Homework):
     # Eliminar una tarea
     db.delete(homework)
     db.commit()
-    return {"detail": "Tarea eliminada correctamente"}
+    return {"message": "Tarea eliminada correctamente", "success": True}
