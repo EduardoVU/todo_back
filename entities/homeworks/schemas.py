@@ -5,7 +5,7 @@ from enum import Enum
 
 class HomeworkStatusEnum(str, Enum):
     pendiente = "pendiente"
-    terminada = "terminada"
+    completada = "completada"
     atrasada = "atrasada"
 
 class HomeworkBase(BaseModel):

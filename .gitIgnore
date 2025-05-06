@@ -15,7 +15,6 @@ __pycache__/
 # Archivos de bases de datos y migraciones
 *.sqlite3
 *.db
-alembic/versions/
 
 # Archivos de compilación
 *.log

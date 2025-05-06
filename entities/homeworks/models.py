@@ -7,7 +7,7 @@ from enum import Enum as PyEnum
 
 class HomeworkStatusEnum(str, PyEnum):
     pendiente = "pendiente"
-    terminada = "terminada"
+    completada = "completada"
     atrasada = "atrasada"
 
 class Homework(Base):
