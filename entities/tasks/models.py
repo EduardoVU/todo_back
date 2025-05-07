@@ -14,7 +14,6 @@ class Task(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     title = Column(String(255), nullable=False)
-    description = Column(MEDIUMTEXT, nullable=True)
     due_date = Column(DateTime, nullable=False)
     status = Column(Enum(TaskStatusEnum), default=TaskStatusEnum.pendiente)
     homework_id = Column(Integer, ForeignKey("homeworks.id"), nullable=False)

@@ -41,7 +41,7 @@ def update_task_endpoint(
 ):
     return controller.update_task(db=db, task_data=task, current_user=current_user)
 
-@router.delete("/tasks/{task_id}", response_model=TaskOut)
+@router.delete("/tasks/{task_id}", response_model=None)
 def delete_task_endpoint(
     task_id: int,
     db: Session = Depends(database.get_db),
