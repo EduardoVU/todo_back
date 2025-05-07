@@ -36,4 +36,4 @@ def update_task(db: Session, task_data: TaskUpdate, task: Task):
 def delete_task(db: Session, task: Task):
     db.delete(task)
     db.commit()
-    return {"detail": "Actividad eliminada correctamente"}
+    return {"detail": "Actividad eliminada correctamente", "success": True}
