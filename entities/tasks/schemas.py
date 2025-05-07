@@ -10,7 +10,6 @@ class TaskStatusEnum(str, Enum):
 
 class TaskBase(BaseModel):
     title: str
-    description: Optional[str] = None
     due_date: datetime
     status: Optional[TaskStatusEnum] = TaskStatusEnum.pendiente
     homework_id: int
@@ -21,7 +20,6 @@ class TaskCreate(TaskBase):
 class TaskUpdate(BaseModel):
     id: int
     title: Optional[str] = None
-    description: Optional[str] = None
     due_date: Optional[datetime] = None
     status: Optional[TaskStatusEnum] = None
 
