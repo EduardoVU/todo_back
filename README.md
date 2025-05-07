@@ -86,3 +86,9 @@ Una vez configurado el archivo `.env` y con la base de datos MySQL corriendo, cr
 alembic upgrade head
 
 
+### Pendientes
+Mandar a correo el código de autenticación al correo
+Mandar a login cuando expire el token
+Cookies de login
+Poner la carpeta dist del front en el backend para subir un solo proyecto a producción, o bien, tener dos terminales, una con el front y otra con el back
+
